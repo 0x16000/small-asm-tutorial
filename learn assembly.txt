@@ -1,0 +1,196 @@
+Version: 0.01
+Welcome to the learn x86_64 assembly tutorial!
+Note that im still learning x86_64 assembly myself and that this is just a small introduction to x86_64 assembly.
+So to start of we need to understand how any cpu architecture works.
+For example writing text to the screen is used by making a syscall (system call) the text will be stored using a db (byte)
+or using a dq (quadword) for example as sleep();
+x86 might be one of the more difficult architectures to learn due to it's nature.
+In assembly no matter what type of assembly you use, you need to use a assembler like any else programming language.
+Also known as an compiler, whatever you call it it doesn't matter.
+For this tutorial we will use the NASM assembler, specified for x86_64 and ported to Linux.
+We will also use the elf64 format when compiling!
+With basically any assembly program we will use syscalls (system calls)
+for example printing text to the screen would be the sys_write syscall (system call)
+exiting the program would be the sys_exit syscall (system call)
+to start of with an assembly program we need to use section .data
+next of we need to make a db (byte) to store the text we want to print out.
+you might as well make a newline db (this byte is 0xA an example of how to make an text and newline db (byte):
+text1 (text1 would be the name of the byte) db (make the byte) "Hello, World!" (text you want to print).
+combined it would look like this for printing text:
+section .data
+	text1 db "Hello, World!"
+in example for the newline call:
+newline db 0xA
+Why 0xA? because its the system call for printing a new line, that is why we called this byte newline.
+Next we will reserve bytes, the maximum amount of text we are allowed to print.
+This will be done using resb which stands for reserve byte.
+To decide the maximum of characters allowed we will set it by using:
+section .bss (make the section for reserving bytes using bss)
+ name (name it whatever) resb 32 (resb is what you need to keep or else it won't work.) 
+(32 is the amount i have given for maximum of allowed characters to be printed).
+combined it would look like this:
+section .bss
+	name resb 32
+To tell the system to start the program we will use:
+section .text
+	global _start
+What is the difference between .text and .data?
+.data section:
+Stores initialized global and static data (variables)
+Read/write access (modifiable data).
+.text section:
+Stores executable code (instructions).
+Usually only read-only access.
+What is global _start?
+The global _start directive in assembly is used to define the entry point of your program when linking with the system's default linker 
+(like ld on Linux).
+So, now we will use _start:
+_start: is the command that actually applies and uses syscalls (system calls).
+Next we will learn about syscalls (system calls) and how to use them.
+Each system call is used by using instructions.
+To start out with any syscall (system call)
+We need to learn about these instructions.
+It is pretty simple, you'll only need some logic of course :)
+So starting out with sys_write (system call)
+We will have to move the instruction into a register, for example rax.
+Then we will decide our value, for example 1.
+It will store the value to 1.
+Now, to actually make the syscall (system call) function we will need to provide it fully.
+Here is an example of sys_write:
+mov rax, 1
+mov rdi, 1
+mov rsi, text1
+mov rdx, 14
+syscall
+The code provided is a syscall (system call) used for sys_write.
+As provided before we will move every instruction into a value.
+Sys_write would be:
+mov rax, 1
+next we will use:
+mov rdi, 1
+This uses stdout for storing text. Using the value 1.
+mov rsi, text1 (or whatever your byte is called)
+is used for moving the rsi instruction to your byte created.
+As an example we made text1 before so we will use it text1.
+Now we will need some math (don't worry it is just counting)
+We will use:
+mov rdx, 13
+This instruction rdx will be moved with the length of the string from text1.
+Example Hello, World! would be 13 characters so we will use the value 13
+Yes you will need to count the spaces as well.
+To finish off we will use:
+syscall
+This is the instruction used for executing the actual system call.
+Now of course since we made a newline byte we will use.
+Make sure to use it AFTER you used your text1 byte.
+The byte newline will be sys_write as well.
+So here is how to use newline:
+mov rax, 1
+mov rdi, 1
+mov rsi, newline
+mov rdx, 1
+syscall
+See? isn't difficult at all.
+Now we will use the sys_exit syscall (system call).
+mov rax, 60
+mov rdi, 0
+syscall
+Once again the instruction rax wil be moved to the value of 60 which is the value for the sys_exit syscall (system call).
+mov rdi, 0 is the exit status 0 command.
+To finish of use:
+syscall
+Note: You will only need to use mov rdi, 0 for sys_exit when exiting a program.
+Now, are you ready to make your first x86_64 assembly program? Lets go!
+Here is the provided code:
+; this is where your byte goes
+section .data
+	text1 db "Hello, World!"
+; reserve byte
+section .bss
+	name resb 32
+; tell the computer to start the program
+section .text
+	global _start
+_start:
+	; print out text using sys_write
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, text1
+	mov rdx, 13
+	syscall
+	; create a new line using sys_write
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, newline
+	mov rdx, 1
+	syscall
+	; exit the program using sys_exit
+	mov rax, 60
+	mov rdi, 0
+	syscall
+This is your first x86_64 assembly program which Prints out: "Hello, World!"
+Compile using: nasm -f elf64 -o main.o main.asm  # Assemble the code
+ld -o main main.o                 # Link the object file
+./main                            # Run the program
+Moving on with other syscalls (system calls) like sys_nanosleep.
+This syscall (system call) is like the sleep(); command in C.
+In order to use this syscall (system call) you will need to use something called as an dq (quadword).
+So, to start you need to move into: section .data 
+If you are there or write your code whatever, make sure to write this line of code:
+time dq 2, 0
+What does this all mean? well first of all time which is the name we set this syscall (system call) can be set to whatever!
+Next we will use dq (quadword) which defines it, moving on we will put a 2, 0 the 2 means 2 seconds and the 0 by 0 nanoseconds.
+You can set the 2 seconds to for example 3 seconds.
+An updated program looks like this using sys_nanosleep:
+section .data
+	text1 db "Hello!"
+	text2 db "Welcome to my assembly program!"
+	newline db 0xA
+	time dq 2, 0
+section .bss
+	name resb 32
+section .text
+	global _start
+_start:
+	; print out Hello! using sys_write
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, text1
+	mov rdx, 6
+	syscall
+	; print out a new line using sys_write
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, newline
+	mov rdx, 1
+	syscall
+	; wait 2 seconds using sys_nanosleep
+	mov rax, 35
+	mov rdi, 0
+	mov rsi, time
+	syscall
+	; print out Welcome to my assembly program! using sys_write
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, text2
+	mov rdx, 31
+	syscall
+	; print out a new line using sys_write
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, newline
+	mov rdx, 1
+	syscall
+	
+	; exit the program using sys_exit
+	mov rax, 60
+	mov rdi, 0
+	syscall
+Now, you made your first assembly program using sys_nanosleep!
+compile using: nasm -f elf64 -o main.o main.asm  # Assemble the code
+ld -o main main.o                 # Link the object file
+./main                            # Run the program
+This is all for now and i hope you enjoyed this tutorial!
+I will definitely keep on writing this tutorial in my free time.
+But for now i will be busy on something else.
+Enjoy your assembly journey! :)
